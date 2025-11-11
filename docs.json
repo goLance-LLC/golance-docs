@@ -12,10 +12,7 @@
   },
   "contextual": {
     "options": [
-      "copy",
-      "chatgpt",
-      "claude",
-      "perplexity"
+      "copy"
     ]
   },
   "favicon": "/favicon.png",
