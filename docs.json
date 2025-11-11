@@ -1,5 +1,10 @@
 {
   "$schema": "https://mintlify.com/docs.json",
+  "api": {
+    "playground": {
+      "display": "simple"
+    }
+  },
   "colors": {
     "dark": "#435AAE",
     "light": "#435AAE",
@@ -8,21 +13,18 @@
   "contextual": {
     "options": [
       "copy",
-      "view",
       "chatgpt",
       "claude",
-      "perplexity",
-      "mcp",
-      "cursor",
-      "vscode"
+      "perplexity"
     ]
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.png",
   "footer": {
     "socials": {
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify",
-      "x": "https://x.com/mintlify"
+      "x": "https://x.com/golanceofficial",
+      "instagram": "https://instagram.com/golanceofficial",
+      "linkedin": "https://linkedin.com/company/golance",
+      "youtube": "https://youtube.com/@golance_/videos"
     }
   },
   "logo": {
@@ -33,13 +35,17 @@
   "navbar": {
     "links": [
       {
-        "href": "mailto:hi@mintlify.com",
+        "href": "mailto:help@golance.com",
         "label": "Support"
+      },
+      {
+        "href": "https://golance.com/login",
+        "label": "Log in"
       }
     ],
     "primary": {
-      "href": "https://dashboard.mintlify.com",
-      "label": "Dashboard",
+      "href": "https://golance.com/signup",
+      "label": "Sign up",
       "type": "button"
     }
   },
@@ -47,89 +53,34 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Community",
-          "href": "https://mintlify.com/community",
-          "icon": "slack"
+          "anchor": "goLance Home",
+          "href": "https://golance.com",
+          "icon": "home"
         },
         {
           "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
+          "href": "https://blog.golance.com",
           "icon": "newspaper"
         }
       ]
     },
-    "tabs": [
+    "groups": [
       {
-        "groups": [
-          {
-            "group": "Getting started",
-            "pages": [
-              "index",
-              "quickstart",
-              "development"
-            ]
-          },
-          {
-            "group": "Customization",
-            "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
-            ]
-          }
-        ],
-        "tab": "Guides"
+        "group": "Getting started",
+        "pages": [
+          "pages/getting-started/introduction",
+          "pages/getting-started/authentication",
+          "pages/getting-started/handling-errors"
+        ]
       },
       {
-        "groups": [
-          {
-            "group": "API documentation",
-            "pages": [
-              "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Endpoint examples",
-            "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
-            ]
-          }
-        ],
-        "tab": "API reference"
-      },
-      {
-        "openapi": "https://petstore3.swagger.io/api/v3/openapi.json",
-        "tab": "OpenAPI reference"
-      },
-      {
-        "openapi": "api-reference/spec.yaml",
-        "tab": "OpenAPI reference local"
+        "group": "API reference",
+        "openapi": "openapi.json"
       }
     ]
   },
-  "theme": "mint"
+  "theme": "aspen",
+  "appearance": {
+    "default": "light"
+  }
 }

@@ -1,0 +1,12 @@
+Use OAuth 2.0 for all API authentication.
+The goLance API implements the **Client Credentials** grant type to issue access tokens for secure, token-based authentication. This allows applications to access goLance resources without exposing user credentials.
+
+To authenticate, you must first obtain a **client ID** and **client secret**, which can be created from your [company page on goLance](https://golance.com/companies) under **OAuth Applications**. If this functionality is not available, please contact [goLance Support](https://golance.com/contact-us) to request access.
+
+Once you have your credentials, send a `POST` request to the [create access token endpoint](/api-reference/authentication/create-access-token) using your client ID and secret. The API responds with a **short-lived access token**, which you include in the `Authorization` header of all subsequent requests:
+
+```
+Authorization: Bearer <access_token>
+```
+
+No scopes are required at this time.

@@ -1,0 +1,33 @@
+## Authentication Errors
+
+All goLance API endpoints require a valid OAuth 2.0 access token.
+If the token is missing, invalid, or expired, the API responds with a `401 Unauthorized` status and a JSON error message:
+
+```json
+{
+  "error": "invalid_token",
+  "message": "Invalid token: access token is invalid"
+}
+```
+
+### Expired Token
+
+If your access token has expired, you must generate a new one.
+See [Create Access Token](/api-reference/authentication/create-access-token) for instructions on how to obtain a new token.
+
+### Invalid or Missing Token
+
+If you receive the same error even with a token, verify that:
+
+* The token value is correct and complete.
+* The token has not been revoked or replaced.
+  If necessary, request a new one using the same authentication process.
+
+### Server Errors (5xx)
+
+If the API returns a `5xx` status code (for example `500 Internal Server Error`), it means that an unexpected error occurred on the goLance servers.  
+These errors are usually temporary.
+
+**Recommended handling:**
+- Retry the request after a short delay (for example, 5–10 seconds).
+- If the error persists, contact [goLance Support](https://golance.com/contact-us) and provide the request details (endpoint, timestamp, and response body if available).

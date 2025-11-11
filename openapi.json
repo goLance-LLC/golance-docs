@@ -23,8 +23,8 @@
   "paths": {
     "/auth/oauth/token": {
       "post": {
-        "description": "Create access token",
-        "summary": "Retrieve an access token using OAuth2 client credentials grant",
+        "description": "Retrieve an access token using OAuth2 client credentials grant",
+        "summary": "Create Access Token",
         "tags": [
           "Authentication"
         ],
@@ -96,8 +96,8 @@
     },
     "/api/v1/external/reports/client/timesheets/list": {
       "get": {
-        "description": "Get timesheets",
-        "summary": "List hourly contract timesheets of the authenticated client",
+        "description": "List hourly contract timesheets of the authenticated client",
+        "summary": "List Hourly Contract Timesheets",
         "security": [
           {
             "bearerAuth": []
