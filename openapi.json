@@ -79,7 +79,8 @@
                     },
                     "expires_in": {
                       "type": "number",
-                      "minimum": 0
+                      "minimum": 0,
+                      "description": "Expiration time in seconds"
                     }
                   },
                   "required": [
@@ -230,7 +231,8 @@
                                 "type": "string"
                               },
                               "rate": {
-                                "type": "number"
+                                "type": "number",
+                                "description": "Hourly pay rate"
                               },
                               "title": {
                                 "type": "string"
