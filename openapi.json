@@ -1,12 +1,12 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "goLance API",
+    "title": "goLance External API",
     "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "https://golance.com"
+      "url": "https://external-api.golance.com"
     }
   ],
   "components": {
@@ -21,83 +21,192 @@
     "parameters": {}
   },
   "paths": {
-    "/auth/oauth/token": {
-      "post": {
-        "description": "Retrieve an access token using OAuth2 client credentials grant",
-        "summary": "Create Access Token",
-        "tags": [
-          "Authentication"
+    "/contracts": {
+      "get": {
+        "description": "List contracts with the assigned teams",
+        "summary": "List Contracts",
+        "security": [
+          {
+            "bearerAuth": []
+          }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "clientId": {
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 100
-                  },
-                  "clientSecret": {
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 100
-                  },
-                  "grantType": {
-                    "type": "string",
-                    "enum": [
-                      "client_credentials"
-                    ]
-                  }
-                },
-                "required": [
-                  "clientId",
-                  "clientSecret",
-                  "grantType"
+        "tags": [
+          "Contracts"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "disputing",
+                  "closed",
+                  "pending",
+                  "paused",
+                  "open"
                 ]
               }
-            }
+            },
+            "required": false,
+            "name": "statuses",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            },
+            "required": false,
+            "name": "itemsPerPage",
+            "in": "query"
           }
-        },
+        ],
         "responses": {
           "200": {
-            "description": "Access token response",
+            "description": "Contract list response.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "access_token": {
-                      "type": "string"
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "disputing",
+                              "closed",
+                              "pending",
+                              "paused",
+                              "open"
+                            ]
+                          },
+                          "contractor": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "firstName": {
+                                "type": "string"
+                              },
+                              "lastName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id"
+                            ]
+                          },
+                          "employer": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "firstName": {
+                                "type": "string"
+                              },
+                              "lastName": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id"
+                            ]
+                          },
+                          "team": {
+                            "type": "object",
+                            "nullable": true,
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "status",
+                          "team"
+                        ]
+                      }
                     },
-                    "token_type": {
-                      "type": "string",
-                      "enum": [
-                        "Bearer"
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "currentPage": {
+                          "type": "number"
+                        },
+                        "itemsPerPage": {
+                          "type": "number"
+                        },
+                        "pagesCount": {
+                          "type": "number"
+                        },
+                        "totalCount": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "currentPage",
+                        "itemsPerPage",
+                        "pagesCount",
+                        "totalCount"
                       ]
-                    },
-                    "expires_in": {
-                      "type": "number",
-                      "minimum": 0,
-                      "description": "Expiration time in seconds"
                     }
                   },
                   "required": [
-                    "access_token",
-                    "token_type",
-                    "expires_in"
+                    "results",
+                    "pagination"
                   ]
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "429": {
+            "description": "Too many requests"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         }
       }
     },
-    "/api/v1/external/reports/client/scheduled-payments/list": {
+    "/scheduled-payments": {
       "get": {
-        "description": "List scheduled (fixed-price) payments of the authenticated client",
+        "description": "List scheduled payments on fixed-price contracts",
         "summary": "List Scheduled Payments",
         "security": [
           {
@@ -105,7 +214,7 @@
           }
         ],
         "tags": [
-          "Reports"
+          "Scheduled Payments"
         ],
         "parameters": [
           {
@@ -211,7 +320,7 @@
           },
           {
             "schema": {
-              "type": "number",
+              "type": "integer",
               "minimum": 1,
               "default": 1
             },
@@ -221,7 +330,7 @@
           },
           {
             "schema": {
-              "type": "number",
+              "type": "integer",
               "minimum": 1,
               "maximum": 100,
               "default": 10
@@ -233,7 +342,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Scheduled payments list response.",
+            "description": "Scheduled payment list response.",
             "content": {
               "application/json": {
                 "schema": {
@@ -244,7 +353,7 @@
                       "items": {
                         "type": "object",
                         "properties": {
-                          "_id": {
+                          "id": {
                             "type": "string"
                           },
                           "name": {
@@ -268,12 +377,13 @@
                           },
                           "scheduledPaymentOn": {
                             "type": "string",
+                            "nullable": true,
                             "description": "Scheduled payment date (ISO 8601)"
                           },
                           "contract": {
                             "type": "object",
                             "properties": {
-                              "_id": {
+                              "id": {
                                 "type": "string"
                               },
                               "title": {
@@ -282,7 +392,7 @@
                               "contractor": {
                                 "type": "object",
                                 "properties": {
-                                  "_id": {
+                                  "id": {
                                     "type": "string"
                                   },
                                   "firstName": {
@@ -293,15 +403,13 @@
                                   }
                                 },
                                 "required": [
-                                  "_id",
-                                  "firstName",
-                                  "lastName"
+                                  "id"
                                 ]
                               },
                               "employer": {
                                 "type": "object",
                                 "properties": {
-                                  "_id": {
+                                  "id": {
                                     "type": "string"
                                   },
                                   "firstName": {
@@ -312,16 +420,14 @@
                                   }
                                 },
                                 "required": [
-                                  "_id",
-                                  "firstName",
-                                  "lastName"
+                                  "id"
                                 ]
                               },
                               "team": {
                                 "type": "object",
                                 "nullable": true,
                                 "properties": {
-                                  "_id": {
+                                  "id": {
                                     "type": "string"
                                   },
                                   "name": {
@@ -329,23 +435,18 @@
                                   }
                                 },
                                 "required": [
-                                  "_id",
-                                  "name"
+                                  "id"
                                 ]
                               }
                             },
                             "required": [
-                              "_id",
-                              "title",
-                              "contractor",
-                              "employer",
+                              "id",
                               "team"
                             ]
                           }
                         },
                         "required": [
-                          "_id",
-                          "name",
+                          "id",
                           "amount",
                           "paidAmount",
                           "status",
@@ -409,21 +510,205 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Too many requests"
           }
         }
       }
     },
-    "/api/v1/external/reports/client/timesheets/list": {
+    "/snapshots": {
       "get": {
-        "description": "List hourly contract timesheets of the authenticated client",
-        "summary": "List Hourly Contract Timesheets",
+        "description": "List time-tracking snapshots",
+        "summary": "List Snapshots",
         "security": [
           {
             "bearerAuth": []
           }
         ],
         "tags": [
-          "Reports"
+          "Snapshots"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Start date in YYYY-MM-DD format",
+              "example": "2026-08-01"
+            },
+            "required": true,
+            "name": "fromDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "End date in YYYY-MM-DD format. Maximum span is 14 days",
+              "example": "2026-08-14"
+            },
+            "required": true,
+            "name": "toDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 250,
+              "example": [
+                "6137109712adad9757ab0e35"
+              ]
+            },
+            "required": false,
+            "name": "contractIds",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000,
+              "default": 100
+            },
+            "required": false,
+            "name": "itemsPerPage",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Snapshot list response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "timestamp": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "loggedMinutes": {
+                            "type": "number"
+                          },
+                          "contractId": {
+                            "type": "string"
+                          },
+                          "isManual": {
+                            "type": "boolean"
+                          },
+                          "isDeleted": {
+                            "type": "boolean"
+                          },
+                          "activity": {
+                            "type": "object",
+                            "properties": {
+                              "percentage": {
+                                "type": "number"
+                              },
+                              "keyboard": {
+                                "type": "number"
+                              },
+                              "mouseClick": {
+                                "type": "number"
+                              },
+                              "mouseScroll": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "percentage",
+                              "keyboard",
+                              "mouseClick",
+                              "mouseScroll"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "timestamp",
+                          "loggedMinutes",
+                          "contractId",
+                          "isManual",
+                          "isDeleted",
+                          "activity"
+                        ]
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "currentPage": {
+                          "type": "number"
+                        },
+                        "itemsPerPage": {
+                          "type": "number"
+                        },
+                        "pagesCount": {
+                          "type": "number"
+                        },
+                        "totalCount": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "currentPage",
+                        "itemsPerPage",
+                        "pagesCount",
+                        "totalCount"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "results",
+                    "pagination"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "429": {
+            "description": "Too many requests"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/timesheets": {
+      "get": {
+        "description": "List hourly contract timesheets",
+        "summary": "List Timesheets",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Timesheets"
         ],
         "parameters": [
           {
@@ -509,7 +794,7 @@
           },
           {
             "schema": {
-              "type": "number",
+              "type": "integer",
               "minimum": 1,
               "default": 1
             },
@@ -519,7 +804,7 @@
           },
           {
             "schema": {
-              "type": "number",
+              "type": "integer",
               "minimum": 1,
               "maximum": 100,
               "default": 10
@@ -545,7 +830,7 @@
                           "contract": {
                             "type": "object",
                             "properties": {
-                              "_id": {
+                              "id": {
                                 "type": "string"
                               },
                               "rate": {
@@ -558,7 +843,7 @@
                               "contractor": {
                                 "type": "object",
                                 "properties": {
-                                  "_id": {
+                                  "id": {
                                     "type": "string"
                                   },
                                   "firstName": {
@@ -569,15 +854,13 @@
                                   }
                                 },
                                 "required": [
-                                  "_id",
-                                  "firstName",
-                                  "lastName"
+                                  "id"
                                 ]
                               },
                               "employer": {
                                 "type": "object",
                                 "properties": {
-                                  "_id": {
+                                  "id": {
                                     "type": "string"
                                   },
                                   "firstName": {
@@ -588,15 +871,14 @@
                                   }
                                 },
                                 "required": [
-                                  "_id",
-                                  "firstName",
-                                  "lastName"
+                                  "id"
                                 ]
                               },
                               "team": {
                                 "type": "object",
+                                "nullable": true,
                                 "properties": {
-                                  "_id": {
+                                  "id": {
                                     "type": "string"
                                   },
                                   "name": {
@@ -604,17 +886,13 @@
                                   }
                                 },
                                 "required": [
-                                  "_id",
-                                  "name"
+                                  "id"
                                 ]
                               }
                             },
                             "required": [
-                              "_id",
-                              "rate",
-                              "title",
-                              "contractor",
-                              "employer"
+                              "id",
+                              "team"
                             ]
                           },
                           "statistics": {
@@ -726,6 +1004,86 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "429": {
+            "description": "Too many requests"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/auth/token": {
+      "post": {
+        "description": "Retrieve an access token using OAuth2 client credentials grant",
+        "summary": "Create Access Token",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "clientId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "clientSecret": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "clientId",
+                  "clientSecret"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access token response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "tokenType": {
+                      "type": "string",
+                      "enum": [
+                        "Bearer"
+                      ]
+                    },
+                    "expiresIn": {
+                      "type": "number",
+                      "minimum": 0,
+                      "description": "Expiration time in seconds"
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "tokenType",
+                    "expiresIn"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid client credentials"
+          },
+          "500": {
+            "description": "Failed to create access token"
           }
         }
       }
