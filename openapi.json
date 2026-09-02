@@ -21,10 +21,200 @@
     "parameters": {}
   },
   "paths": {
+    "/auth/token": {
+      "post": {
+        "summary": "Create an access token",
+        "description": "Exchanges OAuth 2.0 client credentials for a short-lived Bearer access token. Send the token in the `Authorization` header of subsequent requests. Tokens typically expire after one hour; request a new token when the current one expires. This endpoint does not accept a Bearer token.",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "description": "Client credentials issued for the company OAuth application.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "clientId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "clientSecret": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "clientId",
+                  "clientSecret"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "An access token was issued. Cache `accessToken` until `expiresIn` seconds have elapsed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "tokenType": {
+                      "type": "string",
+                      "enum": [
+                        "Bearer"
+                      ]
+                    },
+                    "expiresIn": {
+                      "type": "number",
+                      "minimum": 0,
+                      "description": "Expiration time in seconds"
+                    }
+                  },
+                  "required": [
+                    "accessToken",
+                    "tokenType",
+                    "expiresIn"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request body or query parameters failed validation. Returns `validation_error` and field-level `details`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The client ID or client secret is incorrect. Returns `invalid_client`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The client exceeded the authentication rate limit of 5 requests per minute per IP address and per client ID. Returns `rate_limited`. Wait for the `Retry-After` header before retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The token could not be issued. Returns `internal_error`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/contracts": {
       "get": {
-        "description": "List contracts with the assigned teams",
-        "summary": "List Contracts",
+        "summary": "List contracts",
+        "description": "Returns contracts for the company linked to the OAuth application, including the contractor, employer, and assigned team. Results are limited to contracts the authenticated company can access. Filter by one or more statuses and paginate with `page` and `itemsPerPage`.",
         "security": [
           {
             "bearerAuth": []
@@ -46,7 +236,12 @@
                   "paused",
                   "open"
                 ]
-              }
+              },
+              "description": "Filter by contract status",
+              "example": [
+                "open",
+                "pending"
+              ]
             },
             "required": false,
             "name": "statuses",
@@ -56,7 +251,8 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "default": 1
+              "default": 1,
+              "example": 1
             },
             "required": false,
             "name": "page",
@@ -67,7 +263,8 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 1000,
-              "default": 100
+              "default": 100,
+              "example": 100
             },
             "required": false,
             "name": "itemsPerPage",
@@ -76,7 +273,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Contract list response.",
+            "description": "A paginated list of contracts. If the caller has no accessible company, `results` is empty.",
             "content": {
               "application/json": {
                 "schema": {
@@ -192,22 +389,168 @@
               }
             }
           },
+          "400": {
+            "description": "The request body or query parameters failed validation. Returns `validation_error` and field-level `details`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
           "401": {
-            "description": "Unauthorized"
+            "description": "Authentication failed. The Bearer token is missing, invalid, expired, or not associated with a user. Common codes: `missing_token`, `invalid_token`, `unauthorized`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The token was accepted, but the caller is not allowed to access this resource. Common codes: `forbidden`, `inactive_user`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
           },
           "429": {
-            "description": "Too many requests"
+            "description": "The client exceeded the rate limit of 200 requests per minute per IP address. Returns `rate_limited`. Wait for the `Retry-After` header before retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
           },
           "500": {
-            "description": "Internal server error"
+            "description": "An unexpected error occurred while processing the request. Returns `internal_error`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
           }
         }
       }
     },
     "/scheduled-payments": {
       "get": {
-        "description": "List scheduled payments on fixed-price contracts",
-        "summary": "List Scheduled Payments",
+        "summary": "List scheduled payments",
+        "description": "Returns scheduled payments on fixed-price contracts for the authenticated company over a UTC date range. Each item includes the payment amount, paid amount, status, scheduled date, and parent contract. Filter by team, contractor, or payment status, and sort or paginate the results. The response also includes summary statistics for the same period.",
         "security": [
           {
             "bearerAuth": []
@@ -235,7 +578,7 @@
             "schema": {
               "type": "string",
               "description": "Start date in YYYY-MM-DD format",
-              "example": "2023-01-01"
+              "example": "2026-08-01"
             },
             "required": true,
             "name": "fromDate",
@@ -245,7 +588,7 @@
             "schema": {
               "type": "string",
               "description": "End date in YYYY-MM-DD format",
-              "example": "2023-01-31"
+              "example": "2026-08-31"
             },
             "required": true,
             "name": "toDate",
@@ -342,7 +685,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Scheduled payment list response.",
+            "description": "A paginated list of scheduled payments plus period-level `statistics`. If the caller has no accessible company, `results` is empty.",
             "content": {
               "application/json": {
                 "schema": {
@@ -511,16 +854,168 @@
               }
             }
           },
+          "400": {
+            "description": "The request body or query parameters failed validation. Returns `validation_error` and field-level `details`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed. The Bearer token is missing, invalid, expired, or not associated with a user. Common codes: `missing_token`, `invalid_token`, `unauthorized`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The token was accepted, but the caller is not allowed to access this resource. Common codes: `forbidden`, `inactive_user`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
           "429": {
-            "description": "Too many requests"
+            "description": "The client exceeded the rate limit of 200 requests per minute per IP address. Returns `rate_limited`. Wait for the `Retry-After` header before retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unexpected error occurred while processing the request. Returns `internal_error`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
           }
         }
       }
     },
     "/snapshots": {
       "get": {
-        "description": "List time-tracking snapshots",
-        "summary": "List Snapshots",
+        "summary": "List time-tracking snapshots",
+        "description": "Returns time-tracking snapshots for contracts the caller can access. `fromDate` and `toDate` are required, in `YYYY-MM-DD` (UTC), and the range must not exceed 14 days. Optionally restrict the result to specific `contractIds`. Requesting a contract the caller cannot access returns `403`.",
         "security": [
           {
             "bearerAuth": []
@@ -589,7 +1084,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Snapshot list response.",
+            "description": "A paginated list of snapshots in the requested date range. Discarded snapshots are omitted.",
             "content": {
               "application/json": {
                 "schema": {
@@ -686,22 +1181,168 @@
               }
             }
           },
+          "400": {
+            "description": "The request body or query parameters failed validation. Returns `validation_error` and field-level `details`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
           "401": {
-            "description": "Unauthorized"
+            "description": "Authentication failed. The Bearer token is missing, invalid, expired, or not associated with a user. Common codes: `missing_token`, `invalid_token`, `unauthorized`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The token is not a client-credentials grant, or one or more `contractIds` are not accessible. Returns `forbidden`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
           },
           "429": {
-            "description": "Too many requests"
+            "description": "The client exceeded the rate limit of 200 requests per minute per IP address. Returns `rate_limited`. Wait for the `Retry-After` header before retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
           },
           "500": {
-            "description": "Internal server error"
+            "description": "An unexpected error occurred while processing the request. Returns `internal_error`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
           }
         }
       }
     },
     "/timesheets": {
       "get": {
-        "description": "List hourly contract timesheets",
-        "summary": "List Timesheets",
+        "summary": "List timesheets",
+        "description": "Returns hourly timesheet totals for the authenticated company over a UTC date range. Each item includes the contract and aggregated tracked time, activity, overtime, and billable amounts. Filter by team or contractor, and sort or paginate the results. The response also includes company-wide statistics for the same period.",
         "security": [
           {
             "bearerAuth": []
@@ -729,7 +1370,7 @@
             "schema": {
               "type": "string",
               "description": "Start date in YYYY-MM-DD format",
-              "example": "2023-01-01"
+              "example": "2026-08-01"
             },
             "required": true,
             "name": "fromDate",
@@ -739,7 +1380,7 @@
             "schema": {
               "type": "string",
               "description": "End date in YYYY-MM-DD format",
-              "example": "2023-01-31"
+              "example": "2026-08-31"
             },
             "required": true,
             "name": "toDate",
@@ -816,7 +1457,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Timesheet list response.",
+            "description": "A paginated list of timesheets plus period-level `statistics`. If the caller has no accessible company, `results` is empty.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1005,85 +1646,160 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "429": {
-            "description": "Too many requests"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        }
-      }
-    },
-    "/auth/token": {
-      "post": {
-        "description": "Retrieve an access token using OAuth2 client credentials grant",
-        "summary": "Create Access Token",
-        "tags": [
-          "Authentication"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "clientId": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "clientSecret": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                },
-                "required": [
-                  "clientId",
-                  "clientSecret"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Access token response",
+          "400": {
+            "description": "The request body or query parameters failed validation. Returns `validation_error` and field-level `details`.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "accessToken": {
-                      "type": "string"
-                    },
-                    "tokenType": {
+                    "error": {
                       "type": "string",
-                      "enum": [
-                        "Bearer"
-                      ]
+                      "description": "Machine-readable error code"
                     },
-                    "expiresIn": {
-                      "type": "number",
-                      "minimum": 0,
-                      "description": "Expiration time in seconds"
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
                     }
                   },
                   "required": [
-                    "accessToken",
-                    "tokenType",
-                    "expiresIn"
+                    "error",
+                    "message"
                   ]
                 }
               }
             }
           },
           "401": {
-            "description": "Invalid client credentials"
+            "description": "Authentication failed. The Bearer token is missing, invalid, expired, or not associated with a user. Common codes: `missing_token`, `invalid_token`, `unauthorized`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The token was accepted, but the caller is not allowed to access this resource. Common codes: `forbidden`, `inactive_user`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The client exceeded the rate limit of 200 requests per minute per IP address. Returns `rate_limited`. Wait for the `Retry-After` header before retrying.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
           },
           "500": {
-            "description": "Failed to create access token"
+            "description": "An unexpected error occurred while processing the request. Returns `internal_error`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Machine-readable error code"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable error message"
+                    },
+                    "details": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "nullable": true
+                      },
+                      "description": "Field-level validation errors"
+                    }
+                  },
+                  "required": [
+                    "error",
+                    "message"
+                  ]
+                }
+              }
+            }
           }
         }
       }

@@ -1,7 +1,6 @@
-## Authentication Errors
+## Error format
 
-All goLance API endpoints require a valid OAuth 2.0 access token.
-If the token is missing, invalid, or expired, the API responds with a `401 Unauthorized` status and a JSON error message:
+Every error response is JSON with an `error` code and a `message`:
 
 ```json
 {
@@ -10,22 +9,159 @@ If the token is missing, invalid, or expired, the API responds with a `401 Unaut
 }
 ```
 
-### Expired Token
+- `error` is a stable snake_case code you can switch on.
+- `message` is a human-readable explanation.
+- `400` validation errors also include `details` with per-field messages.
 
-If your access token has expired, you must generate a new one.
-See [Create Access Token](/api-reference/authentication/create-access-token) for instructions on how to obtain a new token.
+A `401 Unauthorized` means the request was not authenticated.
+A `403 Forbidden` means the token was accepted, but the client is not allowed to access the resource.
 
-### Invalid or Missing Token
+| Status | `error` | When |
+| --- | --- | --- |
+| `400` | `validation_error` | Invalid request body or query |
+| `401` | `missing_token` | `Authorization` header is missing |
+| `401` | `invalid_token` | Bearer token is invalid, expired, or revoked |
+| `401` | `invalid_client` | Wrong client ID or secret on `POST /auth/token` |
+| `401` | `unauthorized` | Token is not associated with a user |
+| `403` | `inactive_user` | The user is not active |
+| `403` | `forbidden` | Wrong grant type, no linked company, or inaccessible resource |
+| `404` | `not_found` | Unknown path |
+| `429` | `rate_limited` | Rate limit exceeded |
+| `500` | `internal_error` | Unexpected server error |
 
-If you receive the same error even with a token, verify that:
+## Authentication Errors
 
-* The token value is correct and complete.
+Protected endpoints require a valid OAuth 2.0 access token.
+
+### Missing Token
+
+If the `Authorization` header is missing, protected endpoints return `401 Unauthorized`:
+
+```json
+{
+  "error": "missing_token",
+  "message": "Access token is missing"
+}
+```
+
+Include the token on every request except `POST /auth/token` and `GET /health`:
+
+```
+Authorization: Bearer <access_token>
+```
+
+### Invalid or Expired Token
+
+If the access token is invalid, expired, or revoked, protected endpoints return:
+
+```json
+{
+  "error": "invalid_token",
+  "message": "Invalid token: access token is invalid"
+}
+```
+
+If your access token has expired, request a new one.
+See [Create Access Token](/api-reference/authentication/create-access-token).
+
+If you receive the same error with a token you expect to be valid, verify that:
+
+* The header uses the `Bearer` scheme and the token value is complete.
 * The token has not been revoked or replaced.
-  If necessary, request a new one using the same authentication process.
 
-### Server Errors (5xx)
+### Invalid Client Credentials
 
-If the API returns a `5xx` status code (for example `500 Internal Server Error`), it means that an unexpected error occurred on the goLance servers.  
+`POST /auth/token` does not use a Bearer token. If the client ID or client secret is wrong, the API returns:
+
+```json
+{
+  "error": "invalid_client",
+  "message": "Invalid client credentials"
+}
+```
+
+Confirm the credentials from your [company page on goLance](https://golance.com/companies) under **OAuth Applications**.
+
+### Unauthorized Token
+
+In rare cases, a token is accepted but is not associated with a user. Protected endpoints then return:
+
+```json
+{
+  "error": "unauthorized",
+  "message": "Unauthorized"
+}
+```
+
+If this persists after requesting a new token, contact [goLance Support](https://golance.com/contact-us).
+
+## Validation Errors
+
+If the request body or query parameters fail validation, the API returns `400 Bad Request`:
+
+```json
+{
+  "error": "validation_error",
+  "message": "Input validation failed",
+  "details": {
+    "page": {
+      "message": "Expected number, received nan"
+    }
+  }
+}
+```
+
+## Rate Limits
+
+The API limits how many requests a client can send in a **1-minute** window.
+Limits are counted per IP address, and `POST /auth/token` also counts per `clientId`.
+`GET /health` is not rate limited.
+
+| Scope | Limit | Applies to |
+| --- | --- | --- |
+| IP address | 200 requests per minute | All endpoints except `GET /health` |
+| IP address | 5 requests per minute | `POST /auth/token` |
+| `clientId` | 5 requests per minute | `POST /auth/token` |
+
+`POST /auth/token` is subject to both the global IP limit and the stricter auth limits.
+The lowest remaining limit is the one that applies.
+
+When a limit is exceeded, the API returns `429 Too Many Requests`:
+
+```json
+{
+  "error": "rate_limited",
+  "message": "Too many requests, please try again later."
+}
+```
+
+Successful and rejected responses include rate-limit headers:
+
+```
+RateLimit-Limit: 200
+RateLimit-Remaining: 0
+RateLimit-Reset: 42
+RateLimit-Policy: 200;w=60
+```
+
+A `429` response also includes `Retry-After` with the number of seconds to wait before retrying.
+
+**Recommended handling:**
+
+- Do not retry immediately. Wait for `Retry-After`, or until `RateLimit-Reset` seconds have passed.
+- Cache the access token and reuse it until it expires (typically 1 hour). Do not call `POST /auth/token` on every request.
+
+## Server Errors (5xx)
+
+If the API returns a `5xx` status code (for example `500 Internal Server Error`), it means that an unexpected error occurred on the goLance servers.
+
+```json
+{
+  "error": "internal_error",
+  "message": "An unexpected error occurred"
+}
+```
+
 These errors are usually temporary.
 
 **Recommended handling:**
