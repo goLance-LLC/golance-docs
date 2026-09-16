@@ -1,5 +1,9 @@
 {
   "$schema": "https://mintlify.com/docs.json",
+  "banner": {
+    "content": "⚠️ This documentation is deprecated. Please use the new API at [external-api.golance.com](https://external-api.golance.com).",
+    "dismissible": true
+  },
   "api": {
     "playground": {
       "display": "simple"
